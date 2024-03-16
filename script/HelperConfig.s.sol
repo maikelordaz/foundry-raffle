@@ -26,15 +26,14 @@ contract HelperConfig is Script {
     }
 
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
-        return
-            NetworkConfig({
-                subscriptionId: 0, // 0 create a new subscription
-                gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c,
-                interval: 30,
-                entranceFee: 0.01 ether,
-                callbackGasLimit: 500000,
-                vrfCoordinatorV2: 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
-            });
+        return NetworkConfig({
+            subscriptionId: 0, // 0 create a new subscription
+            gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c,
+            interval: 30,
+            entranceFee: 0.01 ether,
+            callbackGasLimit: 500000,
+            vrfCoordinatorV2: 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
+        });
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
@@ -46,20 +45,16 @@ contract HelperConfig is Script {
         uint96 gasPriceLink = 1e9; // 1 Gwei LINK
 
         vm.startBroadcast();
-        VRFCoordinatorV2Mock vrfCoordinatorV2Mock = new VRFCoordinatorV2Mock(
-            baseFee,
-            gasPriceLink
-        );
+        VRFCoordinatorV2Mock vrfCoordinatorV2Mock = new VRFCoordinatorV2Mock(baseFee, gasPriceLink);
         vm.stopBroadcast();
 
-        return
-            NetworkConfig({
-                subscriptionId: 0, // the script will add this
-                gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c, // it does not matter in a mock
-                interval: 30,
-                entranceFee: 0.01 ether,
-                callbackGasLimit: 500000,
-                vrfCoordinatorV2: address(vrfCoordinatorV2Mock)
-            });
+        return NetworkConfig({
+            subscriptionId: 0, // the script will add this
+            gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c, // it does not matter in a mock
+            interval: 30,
+            entranceFee: 0.01 ether,
+            callbackGasLimit: 500000,
+            vrfCoordinatorV2: address(vrfCoordinatorV2Mock)
+        });
     }
 }
