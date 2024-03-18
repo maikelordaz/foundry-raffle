@@ -21,6 +21,7 @@ contract RaffleTest is Test {
     uint256 entranceFee;
     uint32 callbackGasLimit;
     address vrfCoordinatorV2;
+    address link;
 
     address public PLAYER = makeAddr("player");
     uint256 public constant STARTING_BALANCE = 10 ether;
@@ -34,7 +35,8 @@ contract RaffleTest is Test {
             interval,
             entranceFee,
             callbackGasLimit,
-            vrfCoordinatorV2
+            vrfCoordinatorV2,
+            link
         ) = helperConfig.activeNetworkConfig();
 
         vm.deal(PLAYER, STARTING_BALANCE);
