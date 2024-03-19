@@ -6,6 +6,7 @@ import {Raffle} from "../../src/Raffle.sol";
 import {DeployRaffle} from "../../script/DeployRaffle.s.sol";
 import {Test, console} from "forge-std/test.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 contract RaffleTest is Test {
     /* Events */
@@ -97,5 +98,90 @@ contract RaffleTest is Test {
 
         // The next call will revert called by PLAYER
         raffle.enterRaffle{value: entranceFee}();
+    }
+
+    modifier raffleEnterAndTimePassed() {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        _;
+    }
+
+    /************************ Check upkeep ********************************/
+    function testCheckUpkeepReturnsFalseIfItHasNoBalance() public {
+        // Arrange
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number);
+
+        // Act
+        (bool upkeedNeeded, ) = raffle.checkUpkeep("");
+
+        // Assert
+        assert(!upkeedNeeded);
+    }
+
+    function testCheckUpKeepReturnsFalseIfRaffleNotOpen()
+        public
+        raffleEnterAndTimePassed
+    {
+        // Arrange
+        raffle.performUpkeep("");
+
+        // Act
+        (bool upkeedNeeded, ) = raffle.checkUpkeep("");
+
+        // Assert
+        assert(!upkeedNeeded);
+    }
+
+    /****************** Perform Upkeep ********************/
+    function testPerformUpkeepCanOnlyRunIfCheckUpkeepReturnsTrue()
+        public
+        raffleEnterAndTimePassed
+    {
+        // Foundry does not have notExpectRevert, so if this pass it can be considered as a success
+        // Act
+        raffle.performUpkeep("");
+    }
+
+    function testPerformUpkeepRevertIfCheckUpkeepReturnsFalse() public {
+        // Arrange
+        uint256 currentBalance = 0;
+        uint256 numPlayers = 0;
+        uint256 raffleState = 0;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Raffle.Raffle__UpkeepNotNeeded.selector,
+                currentBalance,
+                numPlayers,
+                raffleState
+            )
+        );
+        raffle.performUpkeep("");
+    }
+
+    function testPerformUpkeepUpdatesRaffleStateAndEmitsRequestId()
+        public
+        raffleEnterAndTimePassed
+    {
+        // Act
+        // This cheatcode records everything that is emitted
+        vm.recordLogs();
+        raffle.performUpkeep(""); // Emits RequestedRaffleWinner
+
+        // Vm.Log[] is a special type that comes with foundry
+        // This cheatcode returns all the logs that were emitted
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        // All logs in foundry are bytes32
+        bytes32 requestId = entries[1].topics[1];
+
+        Raffle.RaffleState raffleState = raffle.getRaffleState();
+
+        // Assert
+        assert(uint256(requestId) > 0);
+        assert(uint256(raffleState) == 1);
     }
 }
